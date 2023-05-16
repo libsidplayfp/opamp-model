@@ -124,7 +124,7 @@ inline long getSeed()
 #endif
 
 static std::default_random_engine prng(getSeed());
-static std::normal_distribution<> normal_dist(1.0, 0.002);
+static std::normal_distribution<> normal_dist(1.0, 0.00001);
 static std::normal_distribution<> normal_dist2(0.5, 0.2);
 
 static double GetRandomValue()
@@ -148,20 +148,20 @@ static void Optimize(const ref_vector_t &reference, int chip)
         bestparams.q = 5.5285312141864937e-05;
         bestparams.b = 2.1608922897100533;
         bestparams.v = 0.67181935418132133;
-        // current score 0.5644984689112712
-        bestparams.q = 3.9849313950818018e-05;
-        bestparams.b = 3.2058524993269955;
-        bestparams.v = 1.6858864584025988;
+        // current score 0.56449846890956767
+        bestparams.q = 3.984844197538005e-05;
+        bestparams.b = 3.2058605554905721;
+        bestparams.v = 1.6858924228168377;
         break;
     case 8580:
         // current score 0.47707930194395543
         bestparams.q = 2.4396355046227875e-310;
         bestparams.b = 147.10522527455893;
         bestparams.v = 0.01032355884323965;
-        // current score 0.19613623190838791
-        bestparams.q = 1.4286906796935193e-307;
-        bestparams.b = 201.07158961183831;
-        bestparams.v = 0.76796947177430164;
+        // current score 0.1961362317665809
+        bestparams.q = 1.4286997721810887e-307;
+        bestparams.b = 201.07159005160145;
+        bestparams.v = 0.76797091115300598;
         break;
     default:
         break;
