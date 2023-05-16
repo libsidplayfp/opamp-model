@@ -122,18 +122,19 @@ public:
 private:
     double GetValue(double Vin) const
     {
-        // y = min + (max-min)/(1+q*e^-bt)^(1/v)
+        // https://en.wikipedia.org/wiki/Generalised_logistic_function
+        // y = min + (max-min)/(1+Q*e^-B*x)^(1/v)
         return std::pow(1. + q*std::exp(b*Vin), 1./v);
     }
 
     double GetScore(double Vout, double Vref) const
     {
-        double diff = Vout - Vref;
+        double diff = (Vout - Vref)/Vref;
         return diff * diff;
     }
 
 public:
-    score_t Score(int chip, const ref_vector_t &reference, bool print, unsigned int bestscore)
+    score_t Score(const ref_vector_t &reference, bool print, unsigned int bestscore)
     {
         score_t score;
 
@@ -145,7 +146,7 @@ public:
         for (data_t data: reference)
         {
             // Calculate score
-            const double simval = Vmin + (Vmax-Vmin)/GetValue(data.Vin);
+            const double simval = Vmin + (Vmax-Vmin)/GetValue(data.Vin-Vmin);
             const double err = GetScore(simval, data.Vout);
             error += err;
 
@@ -164,12 +165,6 @@ public:
         if (print)
         {
             std::cout << "Error: " << score.error << std::endl;
-        }
-
-        // halt if we already are worst than the best score
-        if (score.error > bestscore)
-        {
-            return score;
         }
 
         return score;

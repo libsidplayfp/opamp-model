@@ -124,7 +124,7 @@ inline long getSeed()
 #endif
 
 static std::default_random_engine prng(getSeed());
-static std::normal_distribution<> normal_dist(1.0, 0.0001);
+static std::normal_distribution<> normal_dist(1.0, 0.002);
 static std::normal_distribution<> normal_dist2(0.5, 0.2);
 
 static double GetRandomValue()
@@ -148,19 +148,27 @@ static void Optimize(const ref_vector_t &reference, int chip)
         bestparams.q = 5.5285312141864937e-05;
         bestparams.b = 2.1608922897100533;
         bestparams.v = 0.67181935418132133;
+        // current score 0.5644984689112712
+        bestparams.q = 3.9849313950818018e-05;
+        bestparams.b = 3.2058524993269955;
+        bestparams.v = 1.6858864584025988;
         break;
     case 8580:
-        // current score 0.47707935622794362
-        bestparams.q = 2.4325259082487039e-310;
-        bestparams.b = 147.10522534153901;
-        bestparams.v = 0.010293750527798712;
+        // current score 0.47707930194395543
+        bestparams.q = 2.4396355046227875e-310;
+        bestparams.b = 147.10522527455893;
+        bestparams.v = 0.01032355884323965;
+        // current score 0.19613623190838791
+        bestparams.q = 1.4286906796935193e-307;
+        bestparams.b = 201.07158961183831;
+        bestparams.v = 0.76796947177430164;
         break;
     default:
         break;
     }
 
     // Calculate current score
-    score_t bestscore = bestparams.Score(chip, reference, true, 999999999);
+    score_t bestscore = bestparams.Score(reference, true, 999999999);
     std::cout << "# initial score " << std::dec
         << bestscore << std::endl
         << bestparams.toString() << std::endl << std::endl;
@@ -188,12 +196,12 @@ static void Optimize(const ref_vector_t &reference, int chip)
                     const double oldValue = bestparams.GetValue(i);
 
                     //std::cout << newValue << " -> ";
-                    double newValue = static_cast<double>(GetRandomValue()*oldValue);
+                    double newValue = GetRandomValue()*oldValue;
                     //double newValue = oldValue + GetRandomValue();
                     //std::cout << newValue << std::endl;
 
                     // avoid negative values
-                    if (i != Param_t::B && newValue <= 0.f)
+                    if (newValue <= 0.f)
                     {
                         newValue = EPSILON;
                     }
@@ -208,7 +216,7 @@ static void Optimize(const ref_vector_t &reference, int chip)
         }
 
         // check new score
-        const score_t score = p.Score(chip, reference, false, bestscore.error);
+        const score_t score = p.Score(reference, false, bestscore.error);
         if (bestscore.isBetter(score))
         {
             // accept if improvement
