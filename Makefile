@@ -3,12 +3,15 @@
 # Uncomment to enable parallel processing
 #FLAG_OPENMP = -fopenmp
 
+SRC       = $(wildcard *.cpp)
+EXE       = $(subst .cpp,,$(SRC))
+
 CXXFLAGS = -march=native -O3
 
-all: clean opamp
+all: $(EXE)
 
 clean:
-	$(RM) opamp
+	$(RM) $(EXE)
 
 %: %.cpp
 	$(CXX) $(CXXFLAGS) $(FLAG_OPENMP) -std=c++17 $< -o $@
