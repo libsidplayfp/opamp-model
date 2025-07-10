@@ -8,10 +8,10 @@ An attempt to model the SID opamp transfer functions
 "Op-amp" (self-biased NMOS inverter)
 ------------------------------------
 ~~~
-    
-                12V         12V
-    
-                |           |
+
+               12V         12V
+
+                T           T
                 |           |
                 |           |
                 |    +------o
@@ -30,7 +30,7 @@ An attempt to model the SID opamp transfer functions
          |  ||--+           |   |
          |      |           |   |
          |      |           |   |
-         |      |           |   |
+         |      V           V   |
          |                      |
          |     GND         GND  |
          |                      |
@@ -51,7 +51,7 @@ side of the schematics).
 
 W/L
 ---
-T1a (top left)      ~ 20/80
-T2a (bottom left)   ~ 70/25
-T1b (top right)     ~ 20/40
-T2b (bottom right)  ~ 20/1000
+* T1a (top left)      ~ 20/80
+* T2a (bottom left)   ~ 70/25
+* T1b (top right)     ~ 20/40
+* T2b (bottom right)  ~ 20/1000
