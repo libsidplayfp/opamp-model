@@ -59,4 +59,4 @@ W/L
 Reference values, measured on CAP1B/CAP1A on a chip marked MOS 6581R4AR 0687 14
 ---
 
-![screenshot compact view](https://github.com/libsidplayfp/opamp-model/opamp-6581.png)
+![screenshot opamp transfer function](https://github.com/libsidplayfp/opamp-model/blob/main/opamp-6581.png)
