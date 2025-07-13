@@ -163,7 +163,7 @@ int main() {
 
     double Vx;
 
-    for (double Vi = 2.; Vi < 7.; Vi += 0.1)
+    for (double Vi = 2.4; Vi < 10.; Vi += 0.1)
     {
         for (;;)
         {
