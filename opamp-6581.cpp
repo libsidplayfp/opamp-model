@@ -37,10 +37,9 @@
   Notes:
 
   The schematics above are laid out to show that the "op-amp" logically
-  consists of two building blocks; a saturated load NMOS inverter (on the
-  right hand side of the schematics) with a buffer / bias input stage
-  consisting of a variable saturated load NMOS inverter (on the left hand
-  side of the schematics).
+  consists of two building blocks; an enhancement load NMOS inverter (on the
+  right hand side of the schematics) with a common drain input stage biased
+  by the output voltage (on the left hand side of the schematics).
 
   Provided a reasonably high input impedance and a reasonably low output
   impedance, the "op-amp" can be modeled as a voltage transfer function
@@ -49,76 +48,106 @@
 
 W/L
 
-T1a (top left)      ~ 20/80
-T2a (bottom left)   ~ 70/25
-T1b (top right)     ~ 20/40
-T2b (bottom right)  ~ 20/1000
+M1a (top left)      ~ 80/20
+M2a (bottom left)   ~ 25/70
+M1b (top right)     ~ 40/20
+M2b (bottom right)  ~ 650/20
 
+---
 
-
-Quadratic model - assuming triode/saturation mode
+Transistor quadratic model - assuming triode/saturation mode
 
 Ids = uCox/2 * W/L * (Vgst^2 - Vgdt^2) [Vgdt=0 in saturation]
 
+---
 
-Applying Kirchoff's current law
+Source follower
 
-IdsT1 + IdsT2 = 0
+https://www.allaboutcircuits.com/technical-articles/introduction-to-the-common-drain-amplifier-large-signal-behavior/
 
+Vo = Vi - (sqrt(2*Ibias/uCox*WL) + Vt)
 
-Left side
+M1 is always in saturation
+M2 is in saturation if Vx >= Vo - Vt
 
-W/L*((Vi - Vx - Vt)^2 - (Vi - Vdd - Vt)^2) + W/L*((Vo - Vx - Vt)^2 - (Vo - Vt)^2) = 0
+so
 
-W/L*((Vit - Vx)^2 - (Vit - Vdd)^2) + W/L*((Vot - Vx)^2 - Vot^2) = 0
-
-by setting
-
-x = Vx
-k = W/L T1
-m = W/L T2
-a = Vit
-b = Vot
-c = Vdd
-
-we can rewrite the above as
-
-k((a-x)^2 - (a - c)^2) + m((b - x)^2 - b^2) = 0
-
-which have a solution in
-
-x = (2ka + 2mb - sqrt((-2ka - 2mb)^2 - 4(k + m)(-kc^2 + 2kac))) / 2(k + m)
+Vx = Vi - (sqrt(2*IdsM2/(uCox*WL1)) + Vt)
 
 
-https://www.symbolab.com/solver/equation-calculator/k%5Cleft(%5Cleft(a-x%5Cright)%5E%7B2%7D%20-%20%5Cleft(a%20-%20c%5Cright)%5E%7B2%7D%5Cright)%20%2B%20m%5Cleft(%5Cleft(b%20-%20x%5Cright)%5E%7B2%7D%20-%20b%5E%7B2%7D%5Cright)%20%3D%200?or=input
+Vx = Vi - (sqrt(2*uCox/2 * WL2 * (Vgst^2 - Vgdt^2)/(uCox*WL1)) + Vt)
+
+Vx = Vi - (sqrt(uCox * WL2 * (Vgst^2 - Vgdt^2)/(uCox*WL1)) + Vt)
+
+Vx = Vi - (sqrt(WL2/WL1 * (Vgst^2 - Vgdt^2)) + Vt)
+
+Vx = (Vi - Vt) - sqrt(WL2/WL1 * ((Vo-Vt)^2 - (Vo-Vx-Vt)^2))
 
 
-Right side
+x = a - sqrt(c * (b^2 - (b-x)^2))
 
-W/L*((Vddt - Vo)^2) + W/L*((Vxt - Vo)^2 - Vxt^2) = 0
+https://www.symbolab.com/solver/equation-calculator/x%20%3D%20a%20-%20sqrt%5Cleft(c%20%5Ccdot%20%5Cleft(b%5E%7B2%7D%20-%20%5Cleft(b-x%5Cright)%5E%7B2%7D%5Cright)%5Cright)?or=input
 
-by setting
+x = (a + cb + sqrt(c(-a^2 + 2ab + cb^2)))/(1+c)
 
-x = Vo
-k = W/L T1
-m = W/L T2
-a = Vxt
-b = Vddt
+Vx = ((Vi - Vt) + WL2/WL1*(Vo - Vt) + sqrt(WL2/WL1*(-(Vi - Vt)^2 + 2*(Vi - Vt)*(Vo - Vt) + WL2/WL1*(Vo - Vt)^2)))/(1+WL2/WL1)
 
-we can rewrite the above as
+---
 
-k(b - x)^2 + m((a - x)^2 - a^2) = 0
+Enhancement-load inverter
 
-which have a solution in
+M1 = l (load)
+M2 = d (driver)
 
-x = (kb + ma + sqrt(m(-kb^2 + 2kab + ma^2)) / (k + m)
+IdsM1 = Kn(Vdd-Vt)^2 (saturated load)
 
+Vx<Vt => Idl = 0
 
-https://www.symbolab.com/solver/equation-calculator/k%5Cleft(b%20-%20x%5Cright)%5E%7B2%7D%20%2B%20m%5Cleft(%5Cleft(a%20-%20x%5Cright)%5E%7B2%7D%20-%20a%5E%7B2%7D%5Cright)%20%3D%200?or=input
+Vx>Vt => Vo = Vddt - sqrt(Kd/Kl*(Vx - Vt))
+
+---
+
+Reference values, measured on CAP1B/CAP1A on a chip marked MOS 6581R4AR 0687 14:
+
+ 0.81 -> 10.31
+ 2.40 -> 10.31
+ 2.60 -> 10.30
+ 2.70 -> 10.29
+ 2.80 -> 10.26
+ 2.90 -> 10.17
+ 3.00 -> 10.04
+ 3.10 ->  9.83
+ 3.20 ->  9.58
+ 3.30 ->  9.32
+ 3.50 ->  8.69
+ 3.70 ->  8.00
+ 4.00 ->  6.89
+ 4.40 ->  5.21
+ 4.54 ->  4.54
+ 4.60 ->  4.19
+ 4.80 ->  3.00
+ 4.90 ->  2.30
+ 4.95 ->  2.03
+ 5.00 ->  1.88
+ 5.05 ->  1.77
+ 5.10 ->  1.69
+ 5.20 ->  1.58
+ 5.40 ->  1.44
+ 5.60 ->  1.33
+ 5.80 ->  1.26
+ 6.00 ->  1.21
+ 6.40 ->  1.12
+ 7.00 ->  1.02
+ 7.50 ->  0.97
+ 8.50 ->  0.89
+10.00 ->  0.81
+10.31 ->  0.81
 
 */
 
 #include <iostream>
+#include <iomanip>
+
 #include <cassert>
 #include <cmath>
 
@@ -129,46 +158,49 @@ int main() {
     constexpr double Vdd = 12. * VOLTAGE_SKEW;
     constexpr double Vt = 1.31;
 
-    double Vi = 4.54;
-    double Vo = 4.54;
+    //double Vi = 4.54;
+    double Vo = 5.;
 
     double Vx;
 
-    for (;;)
+    for (double Vi = 2.; Vi < 7.; Vi += 0.1)
     {
+        for (;;)
         {
-            // Vx = (2*WL1*Vit + 2*WL2*Vot + sqrt((-2*WL1*Vit-2*WL2*Vot)^2 - 4(WL1 + WL2)(-Vdd + 2*Vit)*WL1*Vdd))/2(WL1 + WL2)
-            constexpr double WL1 = 20./80.;
-            constexpr double WL2 = 70./25.;
+            {
+                // Vx = ((Vi - Vt) + WL2/WL1*(Vo - Vt) + sqrt(WL2/WL1*(-(Vi - Vt)^2 + 2*(Vi - Vt)*(Vo - Vt) + WL2/WL1*(Vo - Vt)^2)))/(1+WL2/WL1)
+                constexpr double WL1 = 73./19.;
+                constexpr double WL2 = 26./58.;
 
-            const double Vit = Vi - Vt;
-            assert(Vit > 0.);
-            const double Vot = Vo - Vt;
-            assert(Vot > 0.);
+                assert(Vi > Vt); // M1 is in subthreshold mode
+                const double Vit = Vi - Vt;
+                assert(Vo > Vt); // M2 is in subthreshold mode
+                const double Vot = Vo - Vt;
 
-            const double term = -2.*(WL1*Vit + WL2*Vot);
-            const double wl_sum = WL1 + WL2;
-            Vx = (-term + std::sqrt(term*term - 4. * wl_sum * (2.*Vit - Vdd)*WL1*Vdd)) / (2. * wl_sum);
-            std::cout << "Vx: " << Vx << std::endl;
+                const double c = WL2/WL1;
+                Vx = (Vit + c*Vot + std::sqrt(c*(-(Vit*Vit) + 2*Vit*Vot + c*Vot*Vot)))/(1. + c);
+                //std::cout << "Vx: " << Vx << std::endl;
+            }
+
+            double oldVo = Vo;
+
+            {
+                // Vo = Vddt - sqrt(Kd/Kl*(Vx - Vt))
+                constexpr double WL1 = 40./19.;
+                constexpr double WL2 = 664./19.;
+
+                const double Vddt = Vdd - Vt;
+                assert(Vx > Vt); // M2 is in subthreshold mode
+                const double Vxt = Vx - Vt;
+
+                const double c = WL2/WL1;
+                Vo = Vddt - std::sqrt(c*Vxt);
+                //std::cout << "Vo: " << Vo << std::endl;
+            }
+
+            if (std::abs(Vo - oldVo) < 1e-6)
+                break;
         }
-
-        double oldVo = Vo;
-
-        {
-            // Vo = (WL1*Vddt + WL2*Vxt + sqrt(WL2*(-WL1*Vddt^2 + 2*WL1*Vddt*Vxt + WL2*Vxt^2)) / (WL1 + WL2)
-            constexpr double WL1 = 20./40.;
-            constexpr double WL2 = 20./1000.;
-
-            const double Vddt = Vdd - Vt;
-            const double Vxt = Vx - Vt;
-            assert(Vxt > 0.);
-
-            const double wl_sum = WL1 + WL2;
-            Vo = (WL1*Vddt + WL2*Vxt + std::sqrt(WL2*(-WL1*Vddt*Vddt + 2.*WL1*Vddt*Vxt + WL2*Vxt*Vxt))) / wl_sum;
-            std::cout << "Vo: " << Vo << std::endl;
-        }
-
-        if (Vo - oldVo < 1e-6)
-            break;
+        std::cout << std::fixed << std::setprecision(1) << Vi << " -> " << std::setprecision(3) << Vo << std::endl;
     }
 }
