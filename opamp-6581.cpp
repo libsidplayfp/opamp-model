@@ -61,7 +61,7 @@ Ids = uCox/2 * W/L * (Vgst^2 - Vgdt^2) [Vgdt=0 in saturation]
 
 ---
 
-Source follower
+# Source follower
 
 https://www.allaboutcircuits.com/technical-articles/introduction-to-the-common-drain-amplifier-large-signal-behavior/
 
@@ -70,7 +70,7 @@ Vo = Vi - (sqrt(2*Ibias/uCox*WL) + Vt)
 M1 is always in saturation
 M2 is in saturation if Vx >= Vo - Vt
 
-so
+so we have:
 
 Vx = Vi - (sqrt(2*IdsM2/(uCox*WL1)) + Vt)
 
@@ -94,7 +94,7 @@ Vx = ((Vi - Vt) + WL2/WL1*(Vo - Vt) + sqrt(WL2/WL1*(-(Vi - Vt)^2 + 2*(Vi - Vt)*(
 
 ---
 
-Enhancement-load inverter
+# Enhancement-load inverter
 
 M1 = l (load)
 M2 = d (driver)
@@ -158,8 +158,7 @@ int main() {
     constexpr double Vdd = 12. * VOLTAGE_SKEW;
     constexpr double Vt = 1.31;
 
-    //double Vi = 4.54;
-    double Vo = 5.;
+    double Vo = 10.31;
 
     double Vx;
 
