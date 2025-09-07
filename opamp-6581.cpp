@@ -128,14 +128,14 @@ Reference values, measured on CAP1B/CAP1A on a chip marked MOS 6581R4AR 0687 14:
 
 Transistor EKV model
 
-Ids = Is * (if - ir)
+Id = Is * (if - ir)
 
-Is = 2*n*uCox*W/L
+Is = 2*n*uCox*W/L*Ut^2
 
-if = ln(1 + exp((Vp/n-Vs)/(2*Ut)))^2
-ir = ln(1 + exp((Vp/n-Vd)/(2*Ut)))^2
+if = ln(1 + exp((Vp-Vs)/(2*Ut)))^2
+ir = ln(1 + exp((Vp-Vd)/(2*Ut)))^2
 
-Vp ~ Vg - Vt
+Vp ~ (Vg - Vt)/n
 
 */
 #include <stdio.h>
@@ -161,25 +161,39 @@ constexpr double temp = 27.; // ?
 // thermal voltage Ut = kT/q
 constexpr double Ut = k * (temp + 273.15) / q;
 
-struct params
+constexpr double uCox = 20e-6;
+
+struct transistor_params
 {
     double Vg, Vd, Vs;
-    double Vt;
+    double Vt, WL;
 };
 
-double ids(double x, void *params)
-{
-    struct params *p  = (struct params *) params;
+using model_params = transistor_params[2];
 
+double ids(transistor_params *p)
+{
     double Vg = p->Vg;
     double Vd = p->Vd;
     double Vs = p->Vs;
     double Vt = p->Vt;
+    double WL = p->WL;
 
     double Vp = Vg - Vt;
 
-    double tmp = std::log1p(std::exp((Vp - Vd)/(2.*Ut)));
-    return tmp*tmp;
+    double if_tmp = std::log1p(std::exp((Vp - Vs)/(2.*Ut)));
+    double ir_tmp = std::log1p(std::exp((Vp - Vd)/(2.*Ut)));
+    double is = 2 * uCox * WL * Ut*Ut;
+    return if_tmp*if_tmp - ir_tmp*ir_tmp;
+}
+
+double ekv(double x, void *params)
+{
+    model_params *p = (model_params*)params;
+    transistor_params *p1 = p[0];
+    transistor_params *p2 = p[1];
+
+    return ids(p1) + ids(p2);
 }
 
 double findRoot()
@@ -187,10 +201,10 @@ double findRoot()
     constexpr int max_iter = 100;
     int iter = 0;
     double x_lo = 1.0, x_hi = 12.0;
-    struct params params = {1.0, 0.0, 5.0, 1.0};
+    model_params params = { 0 };
 
     gsl_function F;
-    F.function = &ids;
+    F.function = &ekv;
     F.params = &params;
 
     const gsl_root_fsolver_type *T = gsl_root_fsolver_brent;
@@ -205,11 +219,12 @@ double findRoot()
             "err(est)");
 
     int status;
+    double r;
     do
         {
         iter++;
         status = gsl_root_fsolver_iterate (s);
-        double r = gsl_root_fsolver_root (s);
+        r = gsl_root_fsolver_root (s);
         x_lo = gsl_root_fsolver_x_lower (s);
         x_hi = gsl_root_fsolver_x_upper (s);
         status = gsl_root_test_interval (x_lo, x_hi,
