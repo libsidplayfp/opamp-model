@@ -161,7 +161,14 @@ constexpr double temp = 27.; // ?
 // thermal voltage Ut = kT/q
 constexpr double Ut = k * (temp + 273.15) / q;
 
+// Transconductance coefficient
 constexpr double uCox = 20e-6;
+
+constexpr double VOLTAGE_SKEW = 1.015;
+
+constexpr double Vdd = 12. * VOLTAGE_SKEW;
+
+constexpr double Vt = 1.31;
 
 struct transistor_params
 {
@@ -169,42 +176,66 @@ struct transistor_params
     double Vt, WL;
 };
 
-using model_params = transistor_params[2];
+struct model_params
+{
+    transistor_params m1, m2;
+};
+
+struct opamp_params
+{
+    transistor_params m1a, m2a, m1b, m2b;
+};
 
 double ids(transistor_params *p)
 {
     double Vg = p->Vg;
     double Vd = p->Vd;
     double Vs = p->Vs;
-    double Vt = p->Vt;
+    //double Vt = p->Vt;
     double WL = p->WL;
 
     double Vp = Vg - Vt;
 
     double if_tmp = std::log1p(std::exp((Vp - Vs)/(2.*Ut)));
     double ir_tmp = std::log1p(std::exp((Vp - Vd)/(2.*Ut)));
-    double is = 2 * uCox * WL * Ut*Ut;
-    return if_tmp*if_tmp - ir_tmp*ir_tmp;
+    double is = 2. * uCox * WL * Ut*Ut;
+    return is * (if_tmp*if_tmp - ir_tmp*ir_tmp);
 }
 
-double ekv(double x, void *params)
+double common_drain(double x, void *params)
 {
     model_params *p = (model_params*)params;
-    transistor_params *p1 = p[0];
-    transistor_params *p2 = p[1];
+    p->m1.Vs = p->m2.Vd = x;
 
-    return ids(p1) + ids(p2);
+    return ids(&p->m1) + ids(&p->m2);
+}
+/*
+double common_source(model_params *p)
+{
+    return ids(&p->m1) + ids(&p->m2);
 }
 
+double opamp(double x, void *params)
+{
+    opamp_params *p = (opamp_params*)params;
+    return 0.;
+}
+*/
 double findRoot()
 {
     constexpr int max_iter = 100;
     int iter = 0;
     double x_lo = 1.0, x_hi = 12.0;
     model_params params = { 0 };
+    params.m1.WL = 80./20.;
+    params.m2.WL = 25./70.;
+    params.m1.Vg = 5.; // Vi
+    params.m2.Vg = 5.; // Vo
+    params.m1.Vd = Vdd;
+    params.m2.Vs = 0.; // GND
 
     gsl_function F;
-    F.function = &ekv;
+    F.function = &common_drain;
     F.params = &params;
 
     const gsl_root_fsolver_type *T = gsl_root_fsolver_brent;
@@ -243,13 +274,7 @@ double findRoot()
 }
 
 int main() {
-
-    constexpr double VOLTAGE_SKEW = 1.015;
-
-    constexpr double Vdd = 12. * VOLTAGE_SKEW;
-    constexpr double Vt = 1.31;
-    constexpr double uCox = 20e-6;
-
+/*
     double Vo = 1.33;
 
     double Vx;
@@ -304,4 +329,7 @@ int main() {
         }
         std::cout << std::fixed << std::setprecision(1) << Vi << " -> " << std::setprecision(3) << Vo << std::endl;
     }
+*/
+    double Vx = findRoot();
+    std::cout << std::fixed << std::setprecision(3) << Vx << std::endl;
 }
