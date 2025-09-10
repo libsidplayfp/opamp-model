@@ -23,26 +23,26 @@
   ------------------------------------
   ~~~
 
-             12V         12V
+             Vdd         Vdd
 
               ┬           ┬
               │           │
               │           │
               │    ┌──────o
-              │    │      │
+              │    │      │D
               │    │  │├──┘
               │    └──┤│
-              │       │├──┐
-          │├──┘           │
+              │D     G│├──┐
+          │├──┘           │S
   Vi ─────┤│              o───o───── Vo
-          │├──┐           │   │
-              │   Vx  │├──┘   │
+         G│├──┐           │D  │
+              │S  Vx  │├──┘   │
               o───────┤│      │
-              │       │├──┐   │
-          │├──┘           │   │
+              │D     G│├──┐   │
+          │├──┘           │S  │
        ┌──┤│              │   │
-       │  │├──┐           │   │
-       │      │           │   │
+       │ G│├──┐           │   │
+       │      │S          │   │
        │      │           │   │
        │      V           V   │
        │                      │
@@ -51,6 +51,7 @@
        └──────────────────────┘
 
 
+  Vdd - 12V
   Vi  - input voltage
   Vo  - output voltage
   ~~~
@@ -168,6 +169,7 @@ constexpr double VOLTAGE_SKEW = 1.015;
 
 constexpr double Vdd = 12. * VOLTAGE_SKEW;
 
+// Threshold voltage
 constexpr double Vt = 1.31;
 
 struct transistor_params
@@ -207,7 +209,7 @@ double common_drain(double x, void *params)
     model_params *p = (model_params*)params;
     p->m1.Vs = p->m2.Vd = x;
 
-    return ids(&p->m1) + ids(&p->m2);
+    return ids(&p->m1) - ids(&p->m2);
 }
 /*
 double common_source(model_params *p)
@@ -226,11 +228,12 @@ double findRoot()
     constexpr int max_iter = 100;
     int iter = 0;
     double x_lo = 1.0, x_hi = 12.0;
+
     model_params params = { 0 };
     params.m1.WL = 80./20.;
     params.m2.WL = 25./70.;
-    params.m1.Vg = 5.; // Vi
-    params.m2.Vg = 5.; // Vo
+    params.m1.Vg = 4.54; // Vi
+    params.m2.Vg = 4.54; // Vo
     params.m1.Vd = Vdd;
     params.m2.Vs = 0.; // GND
 
