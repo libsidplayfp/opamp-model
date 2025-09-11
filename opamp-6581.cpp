@@ -91,39 +91,41 @@ https://ittc.ku.edu/~jstiles/412/handouts/6.5%20The%20Common%20Source%20Amp%20wi
 
 Reference values, measured on CAP1B/CAP1A on a chip marked MOS 6581R4AR 0687 14:
 
- 0.81 -> 10.31
- 2.40 -> 10.31
- 2.60 -> 10.30
- 2.70 -> 10.29
- 2.80 -> 10.26
- 2.90 -> 10.17
- 3.00 -> 10.04
- 3.10 ->  9.83
- 3.20 ->  9.58
- 3.30 ->  9.32
- 3.50 ->  8.69
- 3.70 ->  8.00
- 4.00 ->  6.89
- 4.40 ->  5.21
- 4.54 ->  4.54
- 4.60 ->  4.19
- 4.80 ->  3.00
- 4.90 ->  2.30
- 4.95 ->  2.03
- 5.00 ->  1.88
- 5.05 ->  1.77
- 5.10 ->  1.69
- 5.20 ->  1.58
- 5.40 ->  1.44
- 5.60 ->  1.33
- 5.80 ->  1.26
- 6.00 ->  1.21
- 6.40 ->  1.12
- 7.00 ->  1.02
- 7.50 ->  0.97
- 8.50 ->  0.89
-10.00 ->  0.81
-10.31 ->  0.81
+  Vi  │   Vo
+──────┼───────
+ 0.81 │ 10.31
+ 2.40 │ 10.31
+ 2.60 │ 10.30
+ 2.70 │ 10.29
+ 2.80 │ 10.26
+ 2.90 │ 10.17
+ 3.00 │ 10.04
+ 3.10 │  9.83
+ 3.20 │  9.58
+ 3.30 │  9.32
+ 3.50 │  8.69
+ 3.70 │  8.00
+ 4.00 │  6.89
+ 4.40 │  5.21
+ 4.54 │  4.54
+ 4.60 │  4.19
+ 4.80 │  3.00
+ 4.90 │  2.30
+ 4.95 │  2.03
+ 5.00 │  1.88
+ 5.05 │  1.77
+ 5.10 │  1.69
+ 5.20 │  1.58
+ 5.40 │  1.44
+ 5.60 │  1.33
+ 5.80 │  1.26
+ 6.00 │  1.21
+ 6.40 │  1.12
+ 7.00 │  1.02
+ 7.50 │  0.97
+ 8.50 │  0.89
+10.00 │  0.81
+10.31 │  0.81
 
 ---
 
@@ -139,7 +141,6 @@ ir = ln(1 + exp((Vp-Vd)/(2*Ut)))^2
 Vp ~ (Vg - Vt)/n
 
 */
-#include <stdio.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_roots.h>
@@ -149,7 +150,9 @@ Vp ~ (Vg - Vt)/n
 
 #include <cassert>
 #include <cmath>
+#include <cstdio>
 
+//#define DEBUG
 
 // Boltzmann Constant
 constexpr double k = 1.380649e-23;
@@ -157,7 +160,7 @@ constexpr double k = 1.380649e-23;
 constexpr double q = 1.602176634e-19;
 
 // temperature in °C
-constexpr double temp = 27.; // ?
+constexpr double temp = 55.;
 
 // thermal voltage Ut = kT/q
 constexpr double Ut = k * (temp + 273.15) / q;
@@ -170,7 +173,7 @@ constexpr double VOLTAGE_SKEW = 1.015;
 constexpr double Vdd = 12. * VOLTAGE_SKEW;
 
 // Threshold voltage
-constexpr double Vt = 1.31;
+constexpr double Vt = 0.91765;
 
 struct transistor_params
 {
@@ -211,18 +214,7 @@ double common_drain(double x, void *params)
 
     return ids(&p->m1) - ids(&p->m2);
 }
-/*
-double common_source(model_params *p)
-{
-    return ids(&p->m1) + ids(&p->m2);
-}
 
-double opamp(double x, void *params)
-{
-    opamp_params *p = (opamp_params*)params;
-    return 0.;
-}
-*/
 double findRoot(model_params* params)
 {
     constexpr int max_iter = 100;
@@ -236,14 +228,14 @@ double findRoot(model_params* params)
     const gsl_root_fsolver_type *T = gsl_root_fsolver_brent;
     gsl_root_fsolver *s = gsl_root_fsolver_alloc (T);
     gsl_root_fsolver_set (s, &F, x_lo, x_hi);
-
+#ifdef DEBUG
     printf ("using %s method\n", 
             gsl_root_fsolver_name (s));
 
     printf ("%5s [%9s, %9s] %9s %9s\n",
             "iter", "lower", "upper", "root", 
             "err(est)");
-
+#endif
     int status;
     double r;
     do
@@ -255,7 +247,7 @@ double findRoot(model_params* params)
         x_hi = gsl_root_fsolver_x_upper (s);
         status = gsl_root_test_interval (x_lo, x_hi,
                                         0, 0.001);
-
+#ifdef DEBUG
         if (status == GSL_SUCCESS)
             printf ("Converged:\n");
 
@@ -263,89 +255,53 @@ double findRoot(model_params* params)
                 iter, x_lo, x_hi,
                 r,
                 x_hi - x_lo);
+#endif
         }
     while (status == GSL_CONTINUE && iter < max_iter);
     return r;
 }
 
 int main() {
-/*
-    double Vo = 1.33;
+    //double Vi = 4.54;
+    double Vo = 5.00; // random initial value
 
-    double Vx;
-
-    for (double Vi = 5.60; Vi > 2.4; Vi -= 0.1)
+    for (double Vi = 3.50; Vi < 5.50; Vi += 0.1)
     {
         for (;;)
         {
+            double Vx;
+
             {
-                // Vx = ((K1*Vit + K2*Vt) + sqrt((K1*Vit + K2*Vt)^2 - (K1+K2)*(K1*Vit^2 - K2*Vot^2 + K2*Vt^2)) / (K1+K2)
-                constexpr double WL1 = 73./19.;
-                constexpr double WL2 = 26./58.;
+                model_params params_common_drain = { 0 };
+                params_common_drain.m1.WL = 80./20.;
+                params_common_drain.m2.WL = 25./70.;
+                params_common_drain.m1.Vg = Vi;
+                params_common_drain.m2.Vg = Vo;
+                params_common_drain.m1.Vd = Vdd;
+                params_common_drain.m2.Vs = 0.; // GND
 
-                constexpr double K1 = uCox/2. * WL1;
-                constexpr double K2 = uCox/2. * WL2;
-
-                assert(Vi - Vx > Vt); // M1 is in subthreshold mode
-                const double Vit = Vi - Vt;
-                assert(Vo > Vt); // M2 is in subthreshold mode
-                const double Vot = Vo - Vt;
-
-                const double a = K1+K2;
-                const double b = K1*Vit + K2*Vt;
-                const double c = K1*Vit*Vit - K2*Vo*Vo + 2.*K2*Vo*Vt;//K1*Vit*Vit - K2*Vot*Vot + K2*Vt*Vt;
-                Vx = (b + std::sqrt(b*b - a*c))/a;
-                std::cout << "Vx: " << Vx << std::endl;
+                Vx = findRoot(&params_common_drain);
+                //std::cout << "Vx: " << std::fixed << std::setprecision(3) << Vx << std::endl;
             }
 
             double oldVo = Vo;
 
             {
-                // Vo = ((K1*Vddt + K2*Vxt) + sqrt((K1*Vddt + K2*Vxt)^2 - (K1+K2)*K1*Vddt^2))/(K1+K2)
-                constexpr double WL1 = 40./19.;
-                constexpr double WL2 = 664./19.;
+                model_params params_common_source = { 0 };
+                params_common_source.m1.WL = 40./20.;
+                params_common_source.m2.WL = 650./20.;
+                params_common_source.m1.Vg = Vdd;
+                params_common_source.m2.Vg = Vx;
+                params_common_source.m1.Vd = Vdd;
+                params_common_source.m2.Vs = 0.; // GND
 
-                constexpr double K1 = uCox/2. * WL1;
-                constexpr double K2 = uCox/2. * WL2;
-
-                const double Vddt = Vdd - Vt;
-                assert(Vx > Vt); // M2 is in subthreshold mode
-                const double Vxt = Vx - Vt;
-
-                const double a = K1+K2;
-                const double b = K1*Vddt + K2*Vxt;
-                const double c = K1*Vddt*Vddt;
-                Vo = (b + std::sqrt(b*b - a*c))/a;
-                std::cout << "Vo: " << Vo << std::endl;
+                Vo = findRoot(&params_common_source);
+                //std::cout << "Vo: " << std::fixed << std::setprecision(3) << Vo << std::endl;
             }
 
             if (std::abs(Vo - oldVo) < 1e-6)
                 break;
         }
-        std::cout << std::fixed << std::setprecision(1) << Vi << " -> " << std::setprecision(3) << Vo << std::endl;
+        std::cout << std::fixed << std::setprecision(2) << Vi << " -> " << std::setprecision(3) << Vo << std::endl;
     }
-*/
-    double Vi = 4.54;
-
-    model_params params_common_drain = { 0 };
-    params_common_drain.m1.WL = 80./20.;
-    params_common_drain.m2.WL = 25./70.;
-    params_common_drain.m1.Vg = Vi;
-    params_common_drain.m2.Vg = 4.54; // Vo
-    params_common_drain.m1.Vd = Vdd;
-    params_common_drain.m2.Vs = 0.; // GND
-
-    double Vx = findRoot(&params_common_drain);
-    std::cout << "Vx: " << std::fixed << std::setprecision(3) << Vx << std::endl;
-
-    model_params params_common_source = { 0 };
-    params_common_source.m1.WL = 40./20.;
-    params_common_source.m2.WL = 650./20.;
-    params_common_source.m1.Vg = Vdd;
-    params_common_source.m2.Vg = Vx;
-    params_common_source.m1.Vd = Vdd;
-    params_common_source.m2.Vs = 0.; // GND
-
-    double Vo = findRoot(&params_common_source);
-    std::cout << "Vo: " << std::fixed << std::setprecision(3) << Vo << std::endl;
 }
