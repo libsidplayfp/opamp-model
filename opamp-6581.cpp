@@ -223,23 +223,15 @@ double opamp(double x, void *params)
     return 0.;
 }
 */
-double findRoot()
+double findRoot(model_params* params)
 {
     constexpr int max_iter = 100;
     int iter = 0;
     double x_lo = 1.0, x_hi = 12.0;
 
-    model_params params = { 0 };
-    params.m1.WL = 80./20.;
-    params.m2.WL = 25./70.;
-    params.m1.Vg = 4.54; // Vi
-    params.m2.Vg = 4.54; // Vo
-    params.m1.Vd = Vdd;
-    params.m2.Vs = 0.; // GND
-
     gsl_function F;
     F.function = &common_drain;
-    F.params = &params;
+    F.params = params;
 
     const gsl_root_fsolver_type *T = gsl_root_fsolver_brent;
     gsl_root_fsolver *s = gsl_root_fsolver_alloc (T);
@@ -333,6 +325,27 @@ int main() {
         std::cout << std::fixed << std::setprecision(1) << Vi << " -> " << std::setprecision(3) << Vo << std::endl;
     }
 */
-    double Vx = findRoot();
-    std::cout << std::fixed << std::setprecision(3) << Vx << std::endl;
+    double Vi = 4.54;
+
+    model_params params_common_drain = { 0 };
+    params_common_drain.m1.WL = 80./20.;
+    params_common_drain.m2.WL = 25./70.;
+    params_common_drain.m1.Vg = Vi;
+    params_common_drain.m2.Vg = 4.54; // Vo
+    params_common_drain.m1.Vd = Vdd;
+    params_common_drain.m2.Vs = 0.; // GND
+
+    double Vx = findRoot(&params_common_drain);
+    std::cout << "Vx: " << std::fixed << std::setprecision(3) << Vx << std::endl;
+
+    model_params params_common_source = { 0 };
+    params_common_source.m1.WL = 40./20.;
+    params_common_source.m2.WL = 650./20.;
+    params_common_source.m1.Vg = Vdd;
+    params_common_source.m2.Vg = Vx;
+    params_common_source.m1.Vd = Vdd;
+    params_common_source.m2.Vs = 0.; // GND
+
+    double Vo = findRoot(&params_common_source);
+    std::cout << "Vo: " << std::fixed << std::setprecision(3) << Vo << std::endl;
 }
