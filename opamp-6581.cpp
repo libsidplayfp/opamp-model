@@ -173,7 +173,7 @@ constexpr double VOLTAGE_SKEW = 1.015;
 constexpr double Vdd = 12. * VOLTAGE_SKEW;
 
 // Threshold voltage
-constexpr double Vt = 0.91765;
+constexpr double Vt = 1.31;
 
 struct transistor_params
 {
@@ -219,7 +219,7 @@ double findRoot(model_params* params)
 {
     constexpr int max_iter = 100;
     int iter = 0;
-    double x_lo = 1.0, x_hi = 12.0;
+    double x_lo = -1.0, x_hi = 13.0;
 
     gsl_function F;
     F.function = &common_drain;
@@ -239,14 +239,14 @@ double findRoot(model_params* params)
     int status;
     double r;
     do
-        {
+    {
         iter++;
         status = gsl_root_fsolver_iterate (s);
         r = gsl_root_fsolver_root (s);
         x_lo = gsl_root_fsolver_x_lower (s);
         x_hi = gsl_root_fsolver_x_upper (s);
         status = gsl_root_test_interval (x_lo, x_hi,
-                                        0, 0.001);
+                                        0, 0.0001);
 #ifdef DEBUG
         if (status == GSL_SUCCESS)
             printf ("Converged:\n");
@@ -256,8 +256,9 @@ double findRoot(model_params* params)
                 r,
                 x_hi - x_lo);
 #endif
-        }
-    while (status == GSL_CONTINUE && iter < max_iter);
+    }
+    while ((status == GSL_CONTINUE) && (iter < max_iter));
+
     return r;
 }
 
@@ -265,7 +266,7 @@ int main() {
     //double Vi = 4.54;
     double Vo = 5.00; // random initial value
 
-    for (double Vi = 3.50; Vi < 5.50; Vi += 0.1)
+    for (double Vi = 0.50; Vi < 10.50; Vi += 0.1)
     {
         for (;;)
         {
