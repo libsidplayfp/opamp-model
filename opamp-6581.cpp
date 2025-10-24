@@ -89,46 +89,6 @@ https://ittc.ku.edu/~jstiles/412/handouts/6.5%20The%20Common%20Source%20Amp%20wi
 
 ---
 
-Reference values, measured on CAP1B/CAP1A on a chip marked MOS 6581R4AR 0687 14:
-
-  Vi  │   Vo
-──────┼───────
- 0.81 │ 10.31
- 2.40 │ 10.31
- 2.60 │ 10.30
- 2.70 │ 10.29
- 2.80 │ 10.26
- 2.90 │ 10.17
- 3.00 │ 10.04
- 3.10 │  9.83
- 3.20 │  9.58
- 3.30 │  9.32
- 3.50 │  8.69
- 3.70 │  8.00
- 4.00 │  6.89
- 4.40 │  5.21
- 4.54 │  4.54
- 4.60 │  4.19
- 4.80 │  3.00
- 4.90 │  2.30
- 4.95 │  2.03
- 5.00 │  1.88
- 5.05 │  1.77
- 5.10 │  1.69
- 5.20 │  1.58
- 5.40 │  1.44
- 5.60 │  1.33
- 5.80 │  1.26
- 6.00 │  1.21
- 6.40 │  1.12
- 7.00 │  1.02
- 7.50 │  0.97
- 8.50 │  0.89
-10.00 │  0.81
-10.31 │  0.81
-
----
-
 Transistor EKV model
 
 Id = Is * (if - ir)
@@ -154,13 +114,59 @@ Vp ~ (Vg - Vt)/n
 
 //#define DEBUG
 
+using Point = struct
+{
+double x;
+double y;
+};
+
+constexpr unsigned int OPAMP_SIZE = 33;
+
+// Reference values, measured on CAP1B/CAP1A on a chip marked MOS 6581R4AR 0687 14:
+constexpr Point opamp_voltage[OPAMP_SIZE] =
+{
+  {  0.81, 10.31 },  // Approximate start of actual range
+  {  2.40, 10.31 },
+  {  2.60, 10.30 },
+  {  2.70, 10.29 },
+  {  2.80, 10.26 },
+  {  2.90, 10.17 },
+  {  3.00, 10.04 },
+  {  3.10,  9.83 },
+  {  3.20,  9.58 },
+  {  3.30,  9.32 },
+  {  3.50,  8.69 },
+  {  3.70,  8.00 },
+  {  4.00,  6.89 },
+  {  4.40,  5.21 },
+  {  4.54,  4.54 },  // Working point (vi = vo)
+  {  4.60,  4.19 },
+  {  4.80,  3.00 },
+  {  4.90,  2.30 },  // Change of curvature
+  {  4.95,  2.03 },
+  {  5.00,  1.88 },
+  {  5.05,  1.77 },
+  {  5.10,  1.69 },
+  {  5.20,  1.58 },
+  {  5.40,  1.44 },
+  {  5.60,  1.33 },
+  {  5.80,  1.26 },
+  {  6.00,  1.21 },
+  {  6.40,  1.12 },
+  {  7.00,  1.02 },
+  {  7.50,  0.97 },
+  {  8.50,  0.89 },
+  { 10.00,  0.81 },
+  { 10.31,  0.81 },  // Approximate end of actual range
+};
+
 // Boltzmann Constant
 constexpr double k = 1.380649e-23;
 // charge of an electron
 constexpr double q = 1.602176634e-19;
 
 // temperature in °C
-constexpr double temp = 55.;
+constexpr double temp = 60.;
 
 // thermal voltage Ut = kT/q
 constexpr double Ut = k * (temp + 273.15) / q;
@@ -173,12 +179,18 @@ constexpr double VOLTAGE_SKEW = 1.015;
 constexpr double Vdd = 12. * VOLTAGE_SKEW;
 
 // Threshold voltage
-constexpr double Vt = 1.31;
+//constexpr double Vt = 1.31;
+constexpr double Vt0 = 1.31;
+
+constexpr double gam = 1.0;  // body effect factor
+constexpr double phi = 0.8;  // bulk Fermi potential FIXME negative for nmos?
+
+constexpr double n = 1.0;
 
 struct transistor_params
 {
     double Vg, Vd, Vs;
-    double Vt, WL;
+    double WL;
 };
 
 struct model_params
@@ -196,14 +208,14 @@ double ids(transistor_params *p)
     double Vg = p->Vg;
     double Vd = p->Vd;
     double Vs = p->Vs;
-    //double Vt = p->Vt;
+    double Vt = Vt0;// + gam * (std::sqrt(std::abs(Vs + phi)) - std::sqrt(std::abs(phi)));
     double WL = p->WL;
 
-    double Vp = Vg - Vt;
+    double Vp = (Vg - Vt) / n;
 
     double if_tmp = std::log1p(std::exp((Vp - Vs)/(2.*Ut)));
     double ir_tmp = std::log1p(std::exp((Vp - Vd)/(2.*Ut)));
-    double is = 2. * uCox * WL * Ut*Ut;
+    double is = 2. * n * uCox * WL * Ut*Ut;
     return is * (if_tmp*if_tmp - ir_tmp*ir_tmp);
 }
 
@@ -264,10 +276,11 @@ double findRoot(model_params* params)
 
 int main() {
     //double Vi = 4.54;
-    double Vo = 5.00; // random initial value
+    double Vo = 10.00; // random initial value
 
-    for (double Vi = 0.50; Vi < 10.50; Vi += 0.1)
+    for (Point p: opamp_voltage)
     {
+        double Vi = p.x;
         for (;;)
         {
             double Vx;
@@ -303,6 +316,8 @@ int main() {
             if (std::abs(Vo - oldVo) < 1e-6)
                 break;
         }
-        std::cout << std::fixed << std::setprecision(2) << Vi << " -> " << std::setprecision(3) << Vo << std::endl;
+        std::cout << std::fixed << std::setprecision(2) << Vi
+            << ", " << std::setprecision(3) << Vo
+            << " (" << p.y << ")" << std::endl;
     }
 }
