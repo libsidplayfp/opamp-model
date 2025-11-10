@@ -171,21 +171,21 @@ constexpr double temp = 60.;
 // thermal voltage Ut = kT/q
 constexpr double Ut = k * (temp + 273.15) / q;
 
-// Transconductance coefficient
-constexpr double uCox = 20e-6;
+constexpr double gam = 1.0;  // body effect factor
+constexpr double phi = 0.8;  // bulk Fermi potential FIXME is it negative for nmos?
 
 constexpr double VOLTAGE_SKEW = 1.015;
 
 constexpr double Vdd = 12. * VOLTAGE_SKEW;
 
+// Slope factor
+constexpr double n = 1.;
+
+// Transconductance coefficient
+constexpr double uCox = 20e-6;
+
 // Threshold voltage
-//constexpr double Vt = 1.31;
 constexpr double Vt0 = 1.31;
-
-constexpr double gam = 1.0;  // body effect factor
-constexpr double phi = 0.8;  // bulk Fermi potential FIXME negative for nmos?
-
-constexpr double n = 1.0;
 
 struct transistor_params
 {
@@ -208,7 +208,7 @@ double ids(transistor_params *p)
     double Vg = p->Vg;
     double Vd = p->Vd;
     double Vs = p->Vs;
-    double Vt = Vt0;// + gam * (std::sqrt(std::abs(Vs + phi)) - std::sqrt(std::abs(phi)));
+    double Vt = Vt0; // + gam * (std::sqrt(std::abs(Vs + phi)) - std::sqrt(std::abs(phi)));
     double WL = p->WL;
 
     double Vp = (Vg - Vt) / n;
@@ -274,8 +274,9 @@ double findRoot(model_params* params)
     return r;
 }
 
-int main() {
-    //double Vi = 4.54;
+double calc() {
+    double err = 0.;
+
     double Vo = 10.00; // random initial value
 
     for (Point p: opamp_voltage)
@@ -316,8 +317,19 @@ int main() {
             if (std::abs(Vo - oldVo) < 1e-6)
                 break;
         }
+        const double diff = Vo - p.y;
         std::cout << std::fixed << std::setprecision(2) << Vi
             << ", " << std::setprecision(3) << Vo
-            << " (" << p.y << ")" << std::endl;
+            << ", " << p.y << " (" << diff << ")" << std::endl;
+
+        err += diff*diff;
     }
+
+    return std::sqrt(err);
+}
+
+int main() {
+    double res = calc();
+    std::cout << "---------------------\n";
+    std::cout << "Error: " << std::fixed << std::setprecision(2) << res << std::endl;
 }
