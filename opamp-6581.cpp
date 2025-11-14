@@ -125,7 +125,7 @@ inline long getSeed()
 
 static std::default_random_engine prng(getSeed());
 
-static std::normal_distribution<> normal_dist(1.0, 0.002);
+static std::normal_distribution<> normal_dist(1.0, 0.0015);
 
 static double GetRandomValue()
 {
@@ -185,7 +185,7 @@ constexpr double k = 1.380649e-23;
 constexpr double q = 1.602176634e-19;
 
 // temperature in °C
-double temp = 44.662075; //60.;
+double temp = 68.136448; //60.;
 
 // thermal voltage Ut = kT/q
 const double Ut = k * (temp + 273.15) / q;
@@ -193,18 +193,18 @@ const double Ut = k * (temp + 273.15) / q;
 constexpr double gam = 1.0;  // body effect factor
 constexpr double phi = 0.8;  // bulk Fermi potential FIXME is it negative for nmos?
 
-constexpr double VOLTAGE_SKEW = 1.290288; //1.015;
+constexpr double VOLTAGE_SKEW = 1.209880; //1.015;
 
 double Vdd = 12. * VOLTAGE_SKEW;
 
 // Slope factor
-double n = 1.174119; //1.12931;
+double n = 1.135494; //1.12931;
 
 // Transconductance coefficient
 double uCox = 20e-6;
 
 // Threshold voltage
-double Vt0 = 0.191873; //0.82592;
+double Vt0 = 0.223080; //0.82592;
 
 struct transistor_params
 {
@@ -311,8 +311,8 @@ double calc() {
 
             {
                 model_params params_common_drain = { 0 };
-                params_common_drain.m1.WL = 80./20.;
-                params_common_drain.m2.WL = 25./70.;
+                params_common_drain.m1.WL = 3.9/1.0;
+                params_common_drain.m2.WL = 1.4/3.1;
                 params_common_drain.m1.Vg = Vi;
                 params_common_drain.m2.Vg = Vo;
                 params_common_drain.m1.Vd = Vdd;
@@ -326,8 +326,8 @@ double calc() {
 
             {
                 model_params params_common_source = { 0 };
-                params_common_source.m1.WL = 40./20.;
-                params_common_source.m2.WL = 650./20.;
+                params_common_source.m1.WL = 2.2/1.0;
+                params_common_source.m2.WL = 32.6/1.0;
                 params_common_source.m1.Vg = Vdd;
                 params_common_source.m2.Vg = Vx;
                 params_common_source.m1.Vd = Vdd;
