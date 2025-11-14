@@ -70,10 +70,10 @@
 
 W/L
 
-M1a (top left)      ~ 80/20
-M2a (bottom left)   ~ 25/70
-M1b (top right)     ~ 40/20
-M2b (bottom right)  ~ 650/20
+M1a (top left)      ~ 80/20  (3.9/1.0)
+M2a (bottom left)   ~ 25/70  (1.4/3.1)
+M1b (top right)     ~ 40/20  (2.2/1.0)
+M2b (bottom right)  ~ 650/20 (32.6/1.0)
 
 ---
 
@@ -160,6 +160,8 @@ constexpr Point opamp_voltage[OPAMP_SIZE] =
   //{ 10.31,  0.81 },  // Approximate end of actual range
 };
 
+constexpr double EPSILON = 1e-6;
+
 // Boltzmann Constant
 constexpr double k = 1.380649e-23;
 // charge of an electron
@@ -174,7 +176,7 @@ constexpr double Ut = k * (temp + 273.15) / q;
 constexpr double gam = 1.0;  // body effect factor
 constexpr double phi = 0.8;  // bulk Fermi potential FIXME is it negative for nmos?
 
-constexpr double VOLTAGE_SKEW = 1.015;
+constexpr double VOLTAGE_SKEW = 1.005;
 
 constexpr double Vdd = 12. * VOLTAGE_SKEW;
 
@@ -185,7 +187,7 @@ constexpr double n = 1.15;
 constexpr double uCox = 20e-6;
 
 // Threshold voltage
-constexpr double Vt0 = 0.85;//1.31;
+constexpr double Vt0 = 0.8;//1.31;
 
 struct transistor_params
 {
@@ -288,8 +290,8 @@ double calc() {
 
             {
                 model_params params_common_drain = { 0 };
-                params_common_drain.m1.WL = 80./20.;
-                params_common_drain.m2.WL = 25./70.;
+                params_common_drain.m1.WL = 3.9/1.0;
+                params_common_drain.m2.WL = 1.4/3.1;
                 params_common_drain.m1.Vg = Vi;
                 params_common_drain.m2.Vg = Vo;
                 params_common_drain.m1.Vd = Vdd;
@@ -303,8 +305,8 @@ double calc() {
 
             {
                 model_params params_common_source = { 0 };
-                params_common_source.m1.WL = 40./20.;
-                params_common_source.m2.WL = 650./20.;
+                params_common_source.m1.WL = 2.2/1.0;
+                params_common_source.m2.WL = 32.6/1.0;
                 params_common_source.m1.Vg = Vdd;
                 params_common_source.m2.Vg = Vx;
                 params_common_source.m1.Vd = Vdd;
@@ -314,7 +316,7 @@ double calc() {
                 //std::cout << "Vo: " << std::fixed << std::setprecision(3) << Vo << std::endl;
             }
 
-            if (std::abs(Vo - oldVo) < 1e-6)
+            if (std::abs(Vo - oldVo) < EPSILON)
                 break;
         }
         const double diff = Vo - p.y;

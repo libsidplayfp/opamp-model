@@ -7,6 +7,10 @@ An attempt to model the SID opamp transfer functions
 
 ## "Op-amp" (self-biased NMOS inverter)
 
+
+![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/schem-opamp-6581.png)
+
+
 ~~~
 
                12V         12V
@@ -68,6 +72,9 @@ https://www.falstad.com/circuit/circuitjs.html?ctz=CQAgjCAMB0l3AWAnC1b0DYQGYBM0B
 
 unfortunately this is quite off from the measured values.
 
-Open questions:
-* are all the transistors enhancement-mode?
-* do all the transistors have the same Vt?
+
+Emulated values with `Vdd = 12.06`, `Vt = 0.8` and `n = 1.15`:
+
+
+![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/opamp-emu-6581.png)
+
