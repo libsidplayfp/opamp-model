@@ -105,8 +105,12 @@ Vp ~ (Vg - Vt)/n
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_roots.h>
 
+#include <chrono>
 #include <iostream>
 #include <iomanip>
+#include <limits>
+#include <random>
+#include <thread>
 
 #include <cassert>
 #include <cmath>
@@ -114,18 +118,33 @@ Vp ~ (Vg - Vt)/n
 
 //#define DEBUG
 
+inline long getSeed()
+{
+    return std::random_device{}();
+}
+
+static std::default_random_engine prng(getSeed());
+
+static std::normal_distribution<> normal_dist(1.0, 0.002);
+
+static double GetRandomValue()
+{
+    return normal_dist(prng);
+}
+
+
 using Point = struct
 {
 double x;
 double y;
 };
 
-constexpr unsigned int OPAMP_SIZE = 33;
+constexpr unsigned int OPAMP_SIZE = 31;
 
 // Reference values, measured on CAP1B/CAP1A on a chip marked MOS 6581R4AR 0687 14:
 constexpr Point opamp_voltage[OPAMP_SIZE] =
 {
-  {  0.81, 10.31 },  // Approximate start of actual range
+  //{  0.81, 10.31 },  // Approximate start of actual range
   {  2.40, 10.31 },
   {  2.60, 10.30 },
   {  2.70, 10.29 },
@@ -157,7 +176,7 @@ constexpr Point opamp_voltage[OPAMP_SIZE] =
   {  7.50,  0.97 },
   {  8.50,  0.89 },
   { 10.00,  0.81 },
-  { 10.31,  0.81 },  // Approximate end of actual range
+  //{ 10.31,  0.81 },  // Approximate end of actual range
 };
 
 // Boltzmann Constant
@@ -166,26 +185,26 @@ constexpr double k = 1.380649e-23;
 constexpr double q = 1.602176634e-19;
 
 // temperature in °C
-constexpr double temp = 60.;
+double temp = 44.662075; //60.;
 
 // thermal voltage Ut = kT/q
-constexpr double Ut = k * (temp + 273.15) / q;
+const double Ut = k * (temp + 273.15) / q;
 
 constexpr double gam = 1.0;  // body effect factor
 constexpr double phi = 0.8;  // bulk Fermi potential FIXME is it negative for nmos?
 
-constexpr double VOLTAGE_SKEW = 1.015;
+constexpr double VOLTAGE_SKEW = 1.290288; //1.015;
 
-constexpr double Vdd = 12. * VOLTAGE_SKEW;
+double Vdd = 12. * VOLTAGE_SKEW;
 
 // Slope factor
-constexpr double n = 1.;
+double n = 1.174119; //1.12931;
 
 // Transconductance coefficient
-constexpr double uCox = 20e-6;
+double uCox = 20e-6;
 
 // Threshold voltage
-constexpr double Vt0 = 1.31;
+double Vt0 = 0.191873; //0.82592;
 
 struct transistor_params
 {
@@ -231,13 +250,13 @@ double findRoot(model_params* params)
 {
     constexpr int max_iter = 100;
     int iter = 0;
-    double x_lo = -1.0, x_hi = 13.0;
+    double x_lo = -1.0, x_hi = 15.0;
 
     gsl_function F;
     F.function = &common_drain;
     F.params = params;
 
-    const gsl_root_fsolver_type *T = gsl_root_fsolver_brent;
+    const gsl_root_fsolver_type *T = gsl_root_fsolver_bisection; // gsl_root_fsolver_brent
     gsl_root_fsolver *s = gsl_root_fsolver_alloc (T);
     gsl_root_fsolver_set (s, &F, x_lo, x_hi);
 #ifdef DEBUG
@@ -254,11 +273,15 @@ double findRoot(model_params* params)
     {
         iter++;
         status = gsl_root_fsolver_iterate (s);
+        if (status != GSL_SUCCESS) {
+            printf ("Error:\n");
+            std::exit(1);
+        }
         r = gsl_root_fsolver_root (s);
         x_lo = gsl_root_fsolver_x_lower (s);
         x_hi = gsl_root_fsolver_x_upper (s);
         status = gsl_root_test_interval (x_lo, x_hi,
-                                        0, 0.0001);
+                                        0., 0.0001);
 #ifdef DEBUG
         if (status == GSL_SUCCESS)
             printf ("Converged:\n");
@@ -318,10 +341,11 @@ double calc() {
                 break;
         }
         const double diff = Vo - p.y;
+#if 0
         std::cout << std::fixed << std::setprecision(2) << Vi
             << ", " << std::setprecision(3) << Vo
             << ", " << p.y << " (" << diff << ")" << std::endl;
-
+#endif
         err += diff*diff;
     }
 
@@ -329,7 +353,38 @@ double calc() {
 }
 
 int main() {
-    double res = calc();
-    std::cout << "---------------------\n";
-    std::cout << "Error: " << std::fixed << std::setprecision(2) << res << std::endl;
+    using namespace std::chrono_literals;
+
+    double best{std::numeric_limits<double>::max()};
+
+    for (;;) {
+        double res = calc();
+        double oldVt = Vt0;
+        double oldn = n;
+        double oldVdd = Vdd;
+        double oldtemp = temp;
+        if (res < best) {
+            best = res;
+            std::cout << "---------------------\n";
+            std::cout << "RSS: " << std::fixed << std::setprecision(6) << best
+                      << "\nVt0: " << Vt0
+                      << ", V skew: " << Vdd/12.
+                      << ", temp: " << temp
+                      << ", n: " << n << std::endl;
+            std::this_thread::sleep_for(2000ms);
+        } else {
+            Vt0 = oldVt;
+            n = oldn;
+            Vdd = oldVdd;
+            temp = oldtemp;
+        }
+        if (GetRandomValue() > 1.)
+            Vt0 *= GetRandomValue();
+        if (GetRandomValue() > 1.)
+            n *= GetRandomValue();
+        if (GetRandomValue() > 1.)
+            Vdd *= GetRandomValue();
+        if (GetRandomValue() > 1.)
+            temp *= GetRandomValue();
+    }
 }
