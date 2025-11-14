@@ -120,12 +120,12 @@ double x;
 double y;
 };
 
-constexpr unsigned int OPAMP_SIZE = 33;
+constexpr unsigned int OPAMP_SIZE = 31;
 
 // Reference values, measured on CAP1B/CAP1A on a chip marked MOS 6581R4AR 0687 14:
 constexpr Point opamp_voltage[OPAMP_SIZE] =
 {
-  {  0.81, 10.31 },  // Approximate start of actual range
+  //{  0.81, 10.31 },  // Approximate start of actual range
   {  2.40, 10.31 },
   {  2.60, 10.30 },
   {  2.70, 10.29 },
@@ -157,7 +157,7 @@ constexpr Point opamp_voltage[OPAMP_SIZE] =
   {  7.50,  0.97 },
   {  8.50,  0.89 },
   { 10.00,  0.81 },
-  { 10.31,  0.81 },  // Approximate end of actual range
+  //{ 10.31,  0.81 },  // Approximate end of actual range
 };
 
 // Boltzmann Constant
@@ -179,13 +179,13 @@ constexpr double VOLTAGE_SKEW = 1.015;
 constexpr double Vdd = 12. * VOLTAGE_SKEW;
 
 // Slope factor
-constexpr double n = 1.;
+constexpr double n = 1.15;
 
 // Transconductance coefficient
 constexpr double uCox = 20e-6;
 
 // Threshold voltage
-constexpr double Vt0 = 1.31;
+constexpr double Vt0 = 0.85;//1.31;
 
 struct transistor_params
 {
@@ -237,7 +237,7 @@ double findRoot(model_params* params)
     F.function = &common_drain;
     F.params = params;
 
-    const gsl_root_fsolver_type *T = gsl_root_fsolver_brent;
+    const gsl_root_fsolver_type *T = gsl_root_fsolver_bisection; // gsl_root_fsolver_brent
     gsl_root_fsolver *s = gsl_root_fsolver_alloc (T);
     gsl_root_fsolver_set (s, &F, x_lo, x_hi);
 #ifdef DEBUG
@@ -331,5 +331,5 @@ double calc() {
 int main() {
     double res = calc();
     std::cout << "---------------------\n";
-    std::cout << "Error: " << std::fixed << std::setprecision(2) << res << std::endl;
+    std::cout << "RSS: " << std::fixed << std::setprecision(2) << res << std::endl;
 }
