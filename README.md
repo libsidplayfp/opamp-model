@@ -7,9 +7,12 @@ An attempt to model the SID opamp transfer functions
 
 ## "Op-amp" (self-biased NMOS inverter)
 
-
-![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/schem-opamp-6581.png)
-
+<table>
+  <tr>
+    <td><img src="img/schem-opamp-6581.png" /></td>
+    <td><img src="img/schem-opamp-6581_2.png" /></td>
+   </tr>
+</table>
 
 ~~~
 
@@ -52,15 +55,29 @@ by the output voltage (on the left hand side of the schematics).
 
 ### W/L values
 
-* M1a (top left)      ~ 80/20
-* M2a (bottom left)   ~ 25/70
-* M1b (top right)     ~ 40/20
-* M2b (bottom right)  ~ 650/20
+* M1a (top left)      ~ 80/20  ( 3.9/1.0)
+* M2a (bottom left)   ~ 25/70  ( 1.4/3.1)
+* M1b (top right)     ~ 40/20  ( 2.2/1.0)
+* M2b (bottom right)  ~ 650/20 (32.6/1.0)
 
 
 ### Reference values, measured on CAP1B/CAP1A on a chip marked MOS 6581R4AR 0687 14
 
-![screenshot opamp transfer function](https://github.com/libsidplayfp/opamp-model/blob/main/opamp-6581.png)
+taken from reSID, by Dag Lem
+
+![screenshot opamp transfer function](https://github.com/libsidplayfp/opamp-model/blob/main/img/opamp-6581.png)
+
+
+### Emulated values
+
+Emulated values with `Vdd = 12.18`, `Vt = 1.31` and `n = 1.15`:
+
+![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/img/opamp6581_vt_1_31.png)
+
+Emulated values with `Vdd = 12.18`, `Vt = 0.8` and `n = 1.15`:
+
+![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/img/opamp6581_vt_0_8.png)
+
 
 
 ### Circuit simulation
@@ -68,13 +85,4 @@ by the output voltage (on the left hand side of the schematics).
 Assuming `uCox = 20uA/V²` and `Vt = 1.31V`
 
 https://www.falstad.com/circuit/circuitjs.html?ctz=CQAgjCAMB0l3AWAnC1b0DYQGYBM0B2AViIA4i4jdIEKSRdsQjnJmBTAWjDACgAHcNiS4QnbNixgqbcZJxRFkXgHNwMsRKkbOuIljbKAZuGmi5U6rK3NRYaNggx4kAhlIJeAJXBXNVXwRSf1FDEAQ2MFClaCJeEx4A3QjfODFcFID7RyhYF1IkDFVU2VwMkrEwNyVeAHcK3X0G3FJg5XqotPFqZtaoXgA3cDhgi1MkmzYEcKnCFiJYlkNY4rARzXk1yFHsGhqEjNGW4KjC9L6shyc8yAwkAs8Ov10+qKDztrrx8yiTs3SUsZAqMIpFcGdOKDbOArrkXAhcHwnhCbKcsOI9u1fCjNuD0dgPP0fGixAgwFJsAhppDyUoZr46TA4sTDqS0p1ZFCwikooyVmoSboCHY8eltjVkfjNsJzJMvmAZRsKSJKi1+h1Fdw1YkfmrlAB7EDBDDTSLYIgIggMZYuJBufR6RSiYLYXiGtgmxQKi24LA9GAQQNu0wgT1mn1WtZw+B2jAOliiOwQV1AA
-
-
-unfortunately this is quite off from the measured values.
-
-
-Emulated values with `Vdd = 12.06`, `Vt = 0.8` and `n = 1.15`:
-
-
-![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/opamp-emu-6581.png)
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2025 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2025-2026 Leandro Nini <drfiemost@users.sourceforge.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -168,7 +168,7 @@ constexpr double k = 1.380649e-23;
 constexpr double q = 1.602176634e-19;
 
 // temperature in °C
-constexpr double temp = 60.;
+constexpr double temp = 55.;
 
 // thermal voltage Ut = kT/q
 constexpr double Ut = k * (temp + 273.15) / q;
@@ -176,7 +176,7 @@ constexpr double Ut = k * (temp + 273.15) / q;
 constexpr double gam = 1.0;  // body effect factor
 constexpr double phi = 0.8;  // bulk Fermi potential FIXME is it negative for nmos?
 
-constexpr double VOLTAGE_SKEW = 1.005;
+constexpr double VOLTAGE_SKEW = 1.015;
 
 constexpr double Vdd = 12. * VOLTAGE_SKEW;
 
@@ -213,7 +213,7 @@ double ids(transistor_params *p)
     double Vt = Vt0; // + gam * (std::sqrt(std::abs(Vs + phi)) - std::sqrt(std::abs(phi)));
     double WL = p->WL;
 
-    double Vp = (Vg - Vt) / n;
+    double Vp = Vg > Vt ? (Vg - Vt)/n : 0.;
 
     double if_tmp = std::log1p(std::exp((Vp - Vs)/(2.*Ut)));
     double ir_tmp = std::log1p(std::exp((Vp - Vd)/(2.*Ut)));
