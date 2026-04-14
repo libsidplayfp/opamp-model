@@ -74,9 +74,9 @@ Emulated values with `Vdd = 12.18`, `Vt = 1.31` and `n = 1.15`:
 
 ![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/img/opamp6581_vt_1_31.png)
 
-Emulated values with `Vdd = 12.18`, `Vt = 0.8` and `n = 1.15`:
+Emulated values with `Vdd = 12.18`, `Vt = 0.7` and `n = 1.10`:
 
-![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/img/opamp6581_vt_0_8.png)
+![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/img/opamp6581_vt_0_7.png)
 
 
 

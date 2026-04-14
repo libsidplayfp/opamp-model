@@ -174,20 +174,20 @@ constexpr double temp = 55.;
 constexpr double Ut = k * (temp + 273.15) / q;
 
 constexpr double gam = 1.0;  // body effect factor
-constexpr double phi = 0.8;  // bulk Fermi potential FIXME is it negative for nmos?
+constexpr double phi = 0.8;  // bulk Fermi potential
 
 constexpr double VOLTAGE_SKEW = 1.015;
 
 constexpr double Vdd = 12. * VOLTAGE_SKEW;
 
 // Slope factor
-constexpr double n = 1.15;
+constexpr double n = 1.10;
 
 // Transconductance coefficient
 constexpr double uCox = 20e-6;
 
 // Threshold voltage
-constexpr double Vt0 = 0.8;//1.31;
+constexpr double Vt0 = 0.7;//1.31;
 
 struct transistor_params
 {
