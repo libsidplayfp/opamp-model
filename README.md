@@ -70,7 +70,7 @@ taken from reSID, by Dag Lem
 
 ### Emulated values
 
-Emulated values with `Vdd = 12.18`, `Vt = 1.31` and `n = 1.15`:
+Emulated values with `Vdd = 12.18`, `Vt = 1.31` and `n = 1.0` (as used in ReSID):
 
 ![screenshot opamp circuit](https://github.com/libsidplayfp/opamp-model/blob/main/img/opamp6581_vt_1_31.png)
 
